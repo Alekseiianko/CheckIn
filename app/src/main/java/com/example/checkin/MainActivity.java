@@ -20,64 +20,81 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 
 public class MainActivity extends AppCompatActivity {
-
-    EditText name ;
-    EditText password;
-    Button logIn;
-    Button signUp;
-    String result;
-
-    private static final String FILENAME = "note.txt";
-
+    public final static String loginFileName = "login";
+    public final static String passwordFileName = "password";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        name = findViewById(R.id.edit_user);
-        password = findViewById(R.id.edit_password);
-        logIn = findViewById(R.id.button_login);
-        signUp = findViewById(R.id.button_sign_up);
-        String login = name.getText().toString();
-        String pass = password.getText().toString();
-        result = login + " " + pass;
-
+        init();
     }
-
-
-    public void signUpMethod(View view) {
-
-        try {
-            // отрываем поток для записи
-            BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(
-                    openFileOutput(FILENAME, MODE_PRIVATE)));
-            // пишем данные
-            bw.write(result);
-            // закрываем поток
-            bw.close();
-            Toast.makeText(this, "Sign Up!", Toast.LENGTH_LONG).show();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void logInMethod(View view) {
-
-        try {
-            // открываем поток для чтения
-            BufferedReader br = new BufferedReader(new InputStreamReader(
-                    openFileInput(FILENAME)));
-            String str = "";
-            // читаем содержимое
-            while ((str = br.readLine()).equals(result)) {
-                Toast.makeText(this, "Correct", Toast.LENGTH_LONG).show();
+    private void init() {
+        final EditText mLoginEdTxt = findViewById(R.id.edit_user);
+        final EditText mPasswordEdTxt = findViewById(R.id.edit_password);
+        Button mLogin = findViewById(R.id.button_login);
+        Button mRegistration = findViewById(R.id.button_sign_up);
+        mRegistration.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final String nLogin = mLoginEdTxt.getText().toString();
+                final String nPassword = mPasswordEdTxt.getText().toString();
+                if (nLogin.isEmpty() || nPassword.isEmpty()) {
+                    Toast.makeText(MainActivity.this, "Enter login and password", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                boolean isLoginWritten = writeToFile(nLogin, loginFileName);
+                boolean isPasswordWritten = writeToFile(nPassword, passwordFileName);
+                if (isLoginWritten && isPasswordWritten) {
+                    Toast.makeText(MainActivity.this, "Correct", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(MainActivity.this, "Error", Toast.LENGTH_SHORT).show();
+                }
             }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
+        });
+        mLogin.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final String nLogin = mLoginEdTxt.getText().toString();
+                final String nPassword = mPasswordEdTxt.getText().toString();
+                if (nLogin.isEmpty() || nPassword.isEmpty()) {
+                    Toast.makeText(MainActivity.this, "Enter login and password", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                String savedLogin = readFromFile(loginFileName);
+                String savedPassword = readFromFile(passwordFileName);
+                if (nLogin.equals(savedLogin) && nPassword.equals(savedPassword)) {
+                    Toast.makeText(MainActivity.this, "Login and password is correct", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(MainActivity.this, "Incorrect types", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+    }
+    private boolean writeToFile(String str, String fileName) {
+        try (FileOutputStream fos = openFileOutput(fileName, MODE_PRIVATE);
+             OutputStreamWriter osw = new OutputStreamWriter(fos);
+             BufferedWriter bw = new BufferedWriter(osw)) {
+            bw.write(str);
+            return true;
         } catch (IOException e) {
             e.printStackTrace();
+            return false;
         }
+    }
+    private String readFromFile(String fileName) {
+        StringBuilder sb = new StringBuilder();
+        try (FileInputStream fis = openFileInput(fileName);
+             InputStreamReader isr = new InputStreamReader(fis);
+             BufferedReader br = new BufferedReader(isr);
+        ) {
+            String s;
+            while ((s = br.readLine()) != null) {
+                sb.append(s);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+        return sb.toString();
     }
 }
