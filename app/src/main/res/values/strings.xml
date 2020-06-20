@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">CheckIn</string>
+    <string name="external_storage">external storage</string>
+    <string name="internal_storage">internal storage</string>
 </resources>
